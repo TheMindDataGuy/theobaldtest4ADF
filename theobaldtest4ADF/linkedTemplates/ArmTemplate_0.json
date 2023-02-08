@@ -479,14 +479,11 @@
 						"userProperties": [],
 						"typeProperties": {
 							"source": {
-								"type": "DelimitedTextSource",
+								"type": "ParquetSource",
 								"storeSettings": {
 									"type": "AzureBlobFSReadSettings",
 									"recursive": true,
 									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "DelimitedTextReadSettings"
 								}
 							},
 							"sink": {
@@ -512,17 +509,15 @@
 						},
 						"inputs": [
 							{
-								"referenceName": "Blob_csv",
+								"referenceName": "Blob_parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"Conainer": "parquet",
+									"Container": "parquet",
 									"Directory": {
 										"value": "@variables('Dir')",
 										"type": "Expression"
 									},
-									"File": "File.parquet",
-									"Separator": ",",
-									"FirstRowAsHeader": true
+									"File": "File.parquet"
 								}
 							}
 						],

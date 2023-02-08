@@ -1,0 +1,341 @@
+{
+	"name": "pipeline1",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy csv 2 Blob",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Set variable Dir",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@variables('SQLCode')",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "DS",
+						"type": "DatasetReference",
+						"parameters": {
+							"Schema": "Schema",
+							"Table": "Table"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Blob_csv",
+						"type": "DatasetReference",
+						"parameters": {
+							"Conainer": "csv",
+							"Directory": {
+								"value": "@variables('Dir')",
+								"type": "Expression"
+							},
+							"File": "File.csv",
+							"Separator": ",",
+							"FirstRowAsHeader": true
+						}
+					}
+				]
+			},
+			{
+				"name": "Copy parquet 2 Blob",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Set variable Dir",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@variables('SQLCode')",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "DS",
+						"type": "DatasetReference",
+						"parameters": {
+							"Schema": "Schema",
+							"Table": "Table"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Blob_parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"Container": "parquet",
+							"Directory": {
+								"value": "@variables('Dir')",
+								"type": "Expression"
+							},
+							"File": "File.parquet"
+						}
+					}
+				]
+			},
+			{
+				"name": "Set variable Dir",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set variable SQLCode",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Dir",
+					"value": {
+						"value": "@utcNow('yyyy-MM-dd/HH:mm:ss')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set variable SQLCode",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "SQLCode",
+					"value": {
+						"value": ";WITH [TenList] AS (\n\tSELECT 0 AS [Id] UNION ALL\n\tSELECT 1 AS [Id] UNION ALL\n\tSELECT 2 AS [Id] UNION ALL\n\tSELECT 3 AS [Id] UNION ALL\n\tSELECT 4 AS [Id] UNION ALL\n\tSELECT 5 AS [Id] UNION ALL\n\tSELECT 6 AS [Id] UNION ALL\n\tSELECT 7 AS [Id] UNION ALL\n\tSELECT 8 AS [Id] UNION ALL\n\tSELECT 9 AS [Id]\n), [FullList] AS (\n  SELECT (([One].[Id] + [Ten].[Id] * 10) + [Hundred].[Id] * 100) + [Thousand].[Id] * 1000 + [TenThousand].[Id] * 10000 + [HundredThousand].[Id] * 100000 + [Million].[Id] * 1000000 AS [Number]\n  FROM       TenList AS [One] \n  CROSS JOIN TenList AS [Ten] \n  CROSS JOIN TenList AS [Hundred] \n  CROSS JOIN TenList AS [Thousand]\n  CROSS JOIN TenList AS [TenThousand]\n  CROSS JOIN TenList AS [HundredThousand]\n  CROSS JOIN TenList AS [Million]\n)\n\nSELECT TOP 100000\n\t [Number] AS [IntNumber]\n\t,CAST(REPLICATE('abc',10) AS nvarchar(30)) AS [ShortText]\n\t,CAST(REPLICATE('abc',1000) AS nvarchar(MAX)) AS [LongText]\n\t,CAST([Number] AS DECIMAL(38,19))/1000 AS [DecimalNumber]\nFROM FullList ORDER BY Number\n",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Copy csv 2 DB",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Copy csv 2 Blob",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": {
+							"value": "IF OBJECT_ID('[DBO].[CSV]','U') IS NOT NULL DROP TABLE [DBO].[CSV]",
+							"type": "Expression"
+						},
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "Blob_csv",
+						"type": "DatasetReference",
+						"parameters": {
+							"Conainer": "csv",
+							"Directory": {
+								"value": "@variables('Dir')",
+								"type": "Expression"
+							},
+							"File": "File.csv",
+							"Separator": ",",
+							"FirstRowAsHeader": true
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS",
+						"type": "DatasetReference",
+						"parameters": {
+							"Schema": "dbo",
+							"Table": "csv"
+						}
+					}
+				]
+			},
+			{
+				"name": "Copy parquet 2 DB",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Copy parquet 2 Blob",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": {
+							"value": "IF OBJECT_ID('[DBO].[parquet]','U') IS NOT NULL DROP TABLE [DBO].[parquet]",
+							"type": "Expression"
+						},
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "Blob_csv",
+						"type": "DatasetReference",
+						"parameters": {
+							"Conainer": "parquet",
+							"Directory": {
+								"value": "@variables('Dir')",
+								"type": "Expression"
+							},
+							"File": "File.parquet",
+							"Separator": ",",
+							"FirstRowAsHeader": true
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS",
+						"type": "DatasetReference",
+						"parameters": {
+							"Schema": "dbo",
+							"Table": "parquet"
+						}
+					}
+				]
+			}
+		],
+		"variables": {
+			"Dir": {
+				"type": "String"
+			},
+			"SQLCode": {
+				"type": "String"
+			}
+		},
+		"annotations": []
+	}
+}

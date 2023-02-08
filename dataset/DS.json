@@ -1,0 +1,32 @@
+{
+	"name": "DS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DB4",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"Schema": {
+				"type": "string",
+				"defaultValue": "Schema"
+			},
+			"Table": {
+				"type": "string",
+				"defaultValue": "Table"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().Schema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().Table",
+				"type": "Expression"
+			}
+		}
+	}
+}

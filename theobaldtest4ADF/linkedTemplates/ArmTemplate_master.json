@@ -1,0 +1,63 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "theobaldtest4ADF"
+		},
+		"Blob4_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'Blob4'"
+		},
+		"DB4_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'DB4'"
+		},
+		"Blob4_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://theobaldtest4blob.dfs.core.windows.net/"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "theobaldtest4ADF_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"Blob4_accountKey": {
+						"value": "[parameters('Blob4_accountKey')]"
+					},
+					"DB4_connectionString": {
+						"value": "[parameters('DB4_connectionString')]"
+					},
+					"Blob4_properties_typeProperties_url": {
+						"value": "[parameters('Blob4_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
